@@ -5,7 +5,6 @@ from a2a.server.events import EventQueue
 from a2a.server.tasks import TaskUpdater
 from a2a.types import (
     InternalError,
-    InvalidParamsError,
     Part,
     Task,
     TaskState,
@@ -31,13 +30,9 @@ class CurrencyAgentExecutor(AgentExecutor):
         context: RequestContext,
         event_queue: EventQueue,
     ) -> None:
-        error = self._validate_request(context)
-        if error:
-            raise InvalidParamsError()
-
         query = context.get_user_input()
-        task = context.current_task
 
+        task = context.current_task
         if not task:
             task = Task(
                 id=context.task_id,
@@ -77,9 +72,6 @@ class CurrencyAgentExecutor(AgentExecutor):
         except Exception as e:
             logger.error(f"An error occurred while streaming the response: {e}")
             raise InternalError() from e
-
-    def _validate_request(self, context: RequestContext) -> bool:
-        return False
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
         raise UnsupportedOperationError()

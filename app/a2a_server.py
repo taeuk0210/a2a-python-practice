@@ -71,6 +71,7 @@ def main(host, port):
             push_config_store=push_config_store,
             push_sender=push_sender,
         )
+
         routes = []
         routes.extend(create_agent_card_routes(agent_card=agent_card))
         routes.extend(
