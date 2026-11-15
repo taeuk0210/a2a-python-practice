@@ -1,6 +1,6 @@
-import logging
-import os
 import sys
+import logging
+from dotenv import load_dotenv
 
 import click
 import httpx
@@ -14,10 +14,9 @@ from a2a.server.tasks import (
     InMemoryTaskStore,
 )
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill, AgentInterface
-from dotenv import load_dotenv
 
-from app.agent import CurrencyAgent
-from app.agent_executor import CurrencyAgentExecutor
+from simple.agent import CurrencyAgent
+from simple.agent_executor import CurrencyAgentExecutor
 
 load_dotenv()
 

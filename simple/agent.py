@@ -24,8 +24,7 @@ def get_exchange_rate(
     Args:
         currency_from: The currency to convert from (e.g., "USD").
         currency_to: The currency to convert to (e.g., "EUR").
-        currency_date: The date for the exchange rate or "latest". Defaults to
-            "latest".
+        currency_date: The date for the exchange rate or "latest". Defaults to "latest".
 
     Returns:
         A dictionary containing the exchange rate data, or an error message if
@@ -64,11 +63,10 @@ class CurrencyAgent:
         "Your sole purpose is to use the 'get_exchange_rate' tool to answer questions about currency exchange rates. "
         "If the user asks about anything other than currency conversion or exchange rates, "
         "politely state that you cannot help with that topic and can only assist with currency-related queries. "
-        "Do not attempt to answer unrelated questions or use tools for other purposes."
-        ""
-        "Set response status to input_required if the user needs to provide more information to complete the request."
-        "Set response status to error if there is an error while processing the request."
-        "Set response status to completed if the request is complete."
+        "Do not attempt to answer unrelated questions or use tools for other purposes. "
+        'Set response status to "input_required" if the user needs to provide more information to complete the request. '
+        'Set response status to "error" if there is an error while processing the request. '
+        'Set response status to "completed" if the request is complete.'
     )
 
     def __init__(self):
