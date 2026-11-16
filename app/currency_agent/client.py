@@ -9,7 +9,7 @@ from a2a.types import SendMessageRequest, Role
 async def main() -> None:
     async with httpx.AsyncClient(timeout=60.0) as httpx_client:
         resolver = A2ACardResolver(
-            httpx_client=httpx_client, base_url="http://localhost:9999"
+            httpx_client=httpx_client, base_url="http://localhost:9991"
         )
 
         agent_card = await resolver.get_agent_card()
@@ -21,7 +21,7 @@ async def main() -> None:
         request = SendMessageRequest(
             message={
                 "role": Role.ROLE_USER,
-                "parts": [{"text": "지금 엔화 몇 원이야?"}],
+                "parts": [{"text": "JPY->KRW 최근 일주일 환율 변화 알려줘"}],
                 "message_id": uuid4().hex,
             }
         )

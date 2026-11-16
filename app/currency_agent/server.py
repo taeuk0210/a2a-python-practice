@@ -15,18 +15,21 @@ from a2a.server.tasks import (
 )
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill, AgentInterface
 
-from simple.agent import CurrencyAgent
-from simple.agent_executor import CurrencyAgentExecutor
+from app.currency_agent.agent import CurrencyAgent
+from app.currency_agent.agent_executor import CurrencyAgentExecutor
 
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+DEFAULT_HOST = "localhost"
+DEFAULT_PORT = 9991
+
 
 @click.command()
-@click.option("--host", "host", default="localhost")
-@click.option("--port", "port", default=9999)
+@click.option("--host", "host", default=DEFAULT_HOST)
+@click.option("--port", "port", default=DEFAULT_PORT)
 def main(host, port):
     try:
         agent_card = AgentCard(

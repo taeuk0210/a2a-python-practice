@@ -14,7 +14,7 @@ memory = MemorySaver()
 
 
 @tool
-def get_exchange_rate(
+async def get_exchange_rate(
     currency_from: str = "USD",
     currency_to: str = "EUR",
     currency_date: str = "latest",
@@ -31,26 +31,30 @@ def get_exchange_rate(
         the request fails.
     """
     try:
-        response = httpx.get(
-            f"https://api.frankfurter.dev/v1/{currency_date}",
-            params={"from": currency_from, "to": currency_to},
-        )
-        response.raise_for_status()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.frankfurter.dev/v1/{currency_date}",
+                params={"from": currency_from, "to": currency_to},
+            )
+            response.raise_for_status()
+            return response.json()
 
-        data = response.json()
-        if "rates" not in data:
-            return {"error": "Invalid API response format."}
-        return data
     except httpx.HTTPError as e:
         return {"error": f"API request failed: {e}"}
+
     except ValueError:
         return {"error": "Invalid JSON response from API."}
 
 
 class ResponseFormat(BaseModel):
-    """Respond to the user in this format."""
+    """Respond to the user in this format.
 
-    status: Literal["input_required", "completed", "error"] = "input_required"
+    Set response status to INPUT_REQUIRED if the user needs to provide more information to complete the request.
+    Set response status to ERROR if there is an error while processing the request.
+    Set response status to COMPLETED if the request is complete.
+    """
+
+    status: Literal["INPUT_REQUIRED", "COMPLETED", "ERROR"] = "INPUT_REQUIRED"
     message: str
 
 
@@ -63,10 +67,7 @@ class CurrencyAgent:
         "Your sole purpose is to use the 'get_exchange_rate' tool to answer questions about currency exchange rates. "
         "If the user asks about anything other than currency conversion or exchange rates, "
         "politely state that you cannot help with that topic and can only assist with currency-related queries. "
-        "Do not attempt to answer unrelated questions or use tools for other purposes. "
-        'Set response status to "input_required" if the user needs to provide more information to complete the request. '
-        'Set response status to "error" if there is an error while processing the request. '
-        'Set response status to "completed" if the request is complete.'
+        "Do not attempt to answer unrelated questions or use tools for other purposes."
     )
 
     def __init__(self):
@@ -80,11 +81,11 @@ class CurrencyAgent:
             response_format=ResponseFormat,
         )
 
-    async def stream(self, query, context_id) -> AsyncIterable[dict[str, Any]]:
+    async def astream(self, query, context_id) -> AsyncIterable[dict[str, Any]]:
         inputs = {"messages": [("user", query)]}
         config = {"configurable": {"thread_id": context_id}}
 
-        for item in self.graph.stream(inputs, config, stream_mode="values"):
+        async for item in self.graph.astream(inputs, config, stream_mode="values"):
             message = item["messages"][-1]
             if (
                 isinstance(message, AIMessage)
@@ -103,25 +104,26 @@ class CurrencyAgent:
                     "content": "Processing the exchange rates..",
                 }
 
-        yield self.get_agent_response(config)
+        yield await self.get_agent_response(config)
 
-    def get_agent_response(self, config):
-        current_state = self.graph.get_state(config)
+    async def get_agent_response(self, config):
+        current_state = await self.graph.aget_state(config)
         structured_response = current_state.values.get("structured_response")
+
         if structured_response and isinstance(structured_response, ResponseFormat):
-            if structured_response.status == "input_required":
+            if structured_response.status == "INPUT_REQUIRED":
                 return {
                     "is_task_complete": False,
                     "require_user_input": True,
                     "content": structured_response.message,
                 }
-            if structured_response.status == "error":
+            if structured_response.status == "ERROR":
                 return {
                     "is_task_complete": False,
                     "require_user_input": True,
                     "content": structured_response.message,
                 }
-            if structured_response.status == "completed":
+            if structured_response.status == "COMPLETED":
                 return {
                     "is_task_complete": True,
                     "require_user_input": False,
