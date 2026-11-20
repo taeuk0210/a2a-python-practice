@@ -87,11 +87,7 @@ class CurrencyAgent:
 
         async for item in self.graph.astream(inputs, config, stream_mode="values"):
             message = item["messages"][-1]
-            if (
-                isinstance(message, AIMessage)
-                and message.tool_calls
-                and len(message.tool_calls) > 0
-            ):
+            if isinstance(message, AIMessage) and message.tool_calls:
                 yield {
                     "is_task_complete": False,
                     "require_user_input": False,
@@ -111,30 +107,15 @@ class CurrencyAgent:
         structured_response = current_state.values.get("structured_response")
 
         if structured_response and isinstance(structured_response, ResponseFormat):
-            if structured_response.status == "INPUT_REQUIRED":
-                return {
-                    "is_task_complete": False,
-                    "require_user_input": True,
-                    "content": structured_response.message,
-                }
-            if structured_response.status == "ERROR":
-                return {
-                    "is_task_complete": False,
-                    "require_user_input": True,
-                    "content": structured_response.message,
-                }
-            if structured_response.status == "COMPLETED":
-                return {
-                    "is_task_complete": True,
-                    "require_user_input": False,
-                    "content": structured_response.message,
-                }
+            return {
+                "is_task_complete": structured_response.status == "COMPLETED",
+                "require_user_input": structured_response.status
+                in ["INPUT_REQUIRED", "ERROR"],
+                "content": structured_response.message,
+            }
 
         return {
             "is_task_complete": False,
             "require_user_input": True,
-            "content": (
-                "We are unable to process your request at the moment. "
-                "Please try again."
-            ),
+            "content": "Unable to generate a forecast at the moment. Please try again.",
         }
