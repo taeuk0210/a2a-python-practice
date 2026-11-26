@@ -4,13 +4,9 @@ from a2a.server.events.event_queue_v2 import EventQueue
 from a2a.server.tasks import TaskUpdater
 from a2a.types import Part, Task, TaskState, InternalError
 
-from app.agents.stream_agent import StreamAgent
-from app.types import *
 
-
-class StreamAgentExecutor(AgentExecutor):
-    def __init__(self, agent: StreamAgent):
-        super().__init__()
+class CurrencyAgentExecutor(AgentExecutor):
+    def __init__(self, agent):
         self.agent = agent
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
@@ -33,27 +29,43 @@ class StreamAgentExecutor(AgentExecutor):
             async for res in self.agent.astream(
                 query=context.get_user_input(), context_id=context.context_id
             ):
-                if not res.is_task_complete and not res.input_required:
+                if res.status == "WORKING":
                     await updater.update_status(
                         TaskState.TASK_STATE_WORKING,
                         updater.new_agent_message([Part(text=res.content)]),
                     )
-                elif res.input_required:
+                    continue
+
+                elif res.status == "INPUT_REQUIRED":
                     await updater.update_status(
                         TaskState.TASK_STATE_INPUT_REQUIRED,
                         updater.new_agent_message([Part(text=res.content)]),
                     )
-                    break
-                else:
-                    await updater.add_artifact(
+
+                elif res.status == "FAILED":
+                    await updater.update_status(
+                        TaskState.TASK_STATE_FAILED,
                         updater.new_agent_message([Part(text=res.content)]),
                     )
+
+                else:
+                    await updater.add_artifact([Part(text=res.content)])
                     await updater.complete()
-                    break
+
+                break
 
         except Exception as e:
             raise InternalError() from e
         return
 
-    async def cancel(self, context: RequestContext, event_queue: EventQueue):
-        return
+    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
+        try:
+            updater = TaskUpdater(
+                event_queue=event_queue,
+                task_id=context.task_id,
+                context_id=context.context_id,
+            )
+            await updater.cancel()
+
+        except Exception as e:
+            raise InternalError() from e
