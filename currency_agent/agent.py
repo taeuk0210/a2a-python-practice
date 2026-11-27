@@ -6,13 +6,12 @@ from typing import Optional, Any, AsyncIterable
 from pydantic import BaseModel
 
 from langchain.agents import create_agent
-from langchain_core.messages import AIMessage, ToolMessage
-from langchain_core.tools import tool
+from langchain.messages import AIMessage, ToolMessage
+from langchain.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.errors import GraphRecursionError
 
-# from app.types import *
 
 from dotenv import load_dotenv
 

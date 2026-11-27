@@ -17,4 +17,5 @@ dependencies = [
     "sse-starlette>=2.3.6",
     "starlette>=0.46.2",
     "a2a-sdk>=0.3.0",
+    "pymupdf>=2.2",
 ]

@@ -18,7 +18,7 @@ from a2a.server.tasks import (
 
 from currency_agent.agent import CurrencyAgent
 from currency_agent.executor import CurrencyAgentExecutor
-from app.utils import agent_to_agent_card
+from currency_agent.utils import agent_to_agent_card
 
 load_dotenv()
 
